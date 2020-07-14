@@ -16,6 +16,7 @@ from ctypes import *
 import numpy as np
 import cv2 
 from sys import argv
+#hello
 
 
 from paddlelite import *
