@@ -30,7 +30,7 @@ opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])
 
 camera = "/dev/video2"
 save_path = 'model_infer'
-vels  = 1535        #写成函数的形式再返回参数
+vels  = 1535        #如果需要速度环的话，需要写成函数的形式再返回参数
 crop_size = 128
 
 for opt_name,opt_value in opts:
@@ -52,7 +52,7 @@ def load_image(cap):
    lower_hsv = np.array([156, 43, 46])      #绿色
    upper_hsv = np.array([180, 255, 255])        #天蓝色
    lower_hsv1 = np.array([0, 43, 46])       #红色
-   upper_hsv1 = np.array([10, 255, 255])
+   upper_hsv1 = np.array([10, 255, 255])    #亮橙色
    ref, frame = cap.read()
 
 
