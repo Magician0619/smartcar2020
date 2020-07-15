@@ -82,8 +82,8 @@ for opt_name,opt_value in opts:
 #    img = np.expand_dims(img, axis=0)
 #    return img
 def dataset(video):
-    lower_hsv = np.array([25, 75, 190])
-    upper_hsv = np.array([40, 255, 255])
+    lower_hsv = np.array([25, 75, 190]) #深蓝色
+    upper_hsv = np.array([40, 255, 255])    #青色
     
     select.select((video,), (), ())        
     image_data = video.read_and_queue()
