@@ -40,12 +40,13 @@ from user import user_cmd
 #script,vels,save_path= argv
 
 path = os.path.split(os.path.realpath(__file__))[0]+"/.."
-opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])
+opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])  #-hH帮助指令，直接打印参数
 
 camera = "/dev/video2"
 save_path = 'model_infer'
-vels  = 1535
-crop_size = 128
+
+vels  = 1535    #固定的速度，如改变则需要函数传参
+crop_size = 128     #传入yolo模型中图片的尺寸
 
 for opt_name,opt_value in opts:
     if opt_name in ('-h','-H'):
@@ -60,35 +61,46 @@ for opt_name,opt_value in opts:
        
     if opt_name in ('--camera'):
        camera = opt_value
-#def load_image(cap):
 
-#    lower_hsv = np.array([156, 43, 46])
-#    upper_hsv = np.array([180, 255, 255])
-#    lower_hsv1 = np.array([0, 43, 46])
-#    upper_hsv1 = np.array([10, 255, 255])
-#    ref, frame = cap.read()
+#！！！
+#注意array里面是RGB的值，不是HSV
+#！！！
+def load_image(cap):
+
+   lower_hsv = np.array([156, 43, 46])
+   upper_hsv = np.array([180, 255, 255])
+   lower_hsv1 = np.array([0, 43, 46])
+   upper_hsv1 = np.array([10, 255, 255])
+   ref, frame = cap.read()
 
 
-#    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
-#    mask0 = cv2.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)
-#    mask1 = cv2.inRange(hsv, lowerb=lower_hsv1, upperb=upper_hsv1)
-#    mask = mask0 + mask1
-#    img = Image.fromarray(mask)
-#    img = img.resize((128, 128), Image.ANTIALIAS)
-#    img = np.array(img).astype(np.float32)
-#    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-#    img = img.transpose((2, 0, 1))
-#    img = img[(2, 1, 0), :, :] / 255.0
-#    img = np.expand_dims(img, axis=0)
-#    return img
+   hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
+   mask0 = cv2.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)
+   mask1 = cv2.inRange(hsv, lowerb=lower_hsv1, upperb=upper_hsv1)
+   mask = mask0 + mask1
+   img = Image.fromarray(mask)
+   img = img.resize((128, 128), Image.ANTIALIAS)
+   img = np.array(img).astype(np.float32)
+   img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+   img = img.transpose((2, 0, 1))
+   img = img[(2, 1, 0), :, :] / 255.0
+   img = np.expand_dims(img, axis=0)
+   return img
+
 def dataset(video):
     lower_hsv = np.array([25, 75, 190]) #深蓝色
     upper_hsv = np.array([40, 255, 255])    #青色
     
-    select.select((video,), (), ())        
+    select.select((video,), (), ())        # select()方法接收并监控3个通信列表
+                                           # 第1个是所有的输入的data,就是指外部发过来的数据，
+                                           # 第2个是监控和接收所有要发出去的data(outgoing data)
+                                           # 第3个监控错误信息
     image_data = video.read_and_queue()
+
     frame = cv2.imdecode(np.frombuffer(image_data, dtype=np.uint8), cv2.IMREAD_COLOR)
+
     '''load  128*128'''
+    #数据预处理，二值化、掩膜处理、resize、归一化
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask0 = cv2.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)   
     mask = mask0 #+ mask1
@@ -98,10 +110,10 @@ def dataset(video):
     img = np.array(img).astype(np.float32)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = img / 255.0;
-    img = np.expand_dims(img, axis=0)
+    img = np.expand_dims(img, axis=0)   #扩展数组，增加一个维度
     print("image____shape:",img.shape)
     '''object   256*256'''
-    img_256 = Image.fromarray(frame)
+    img_256 = Image.fromarray(frame)    #创建图像内存
     return img_256,img;
 
 def load_model():
