@@ -108,14 +108,16 @@ def dataset(video):
     img = np.array(img).astype(np.float32)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = img / 255.0;
-    print("vedio函数中没有增加维度之前的shape",img.shape)
+    print("Before func_expand image_shape:",img.shape)
     img = np.expand_dims(img, axis=0)
-    print("vedio函数中的image_shape:",img.shape)
+    print("vedio image_shape:",img.shape)
     '''object   256*256'''
     img_256 = Image.fromarray(frame)
     return img_256,img;
 
-#加载模型
+#*************
+#car line
+#*************
 def load_model():
 
 
@@ -140,8 +142,8 @@ def predict(predictor, image, z):
 
     i = predictor.get_input(0);
     i.resize((1, 3, 128, 128));
-    print("predict函数中的img",img.shape)
-    print("predict中的z",z.shape)
+    print("predict img.shape:",img.shape)
+    print("predict z.shape:",z.shape)
     z[ 0,0:img.shape[1], 0:img.shape[2] + 0, 0:img.shape[3]] = img
     z = z.reshape(1, 3, 128, 128);
     frame1 = cv2.imdecode(np.frombuffer(img, dtype=np.uint8), cv2.IMREAD_COLOR)
@@ -156,8 +158,9 @@ def predict(predictor, image, z):
 
 
 
-'''##########################################################object  detect##########################################################'''
-
+#*************
+#object detect
+#*************
 
 train_parameters ={
     "train_list": "train.txt",
@@ -244,7 +247,7 @@ def init_train_parameters():
 
 
 def read_image():
-    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/mmmmm2.jpg"
+    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/read.jpg"
     
 
     lock.acquire()
@@ -264,7 +267,7 @@ def read_image():
     img = img[np.newaxis, :]
     return img
 
-#加载预测模型
+
 def load_model_detect():
     ues_tiny = train_parameters['use_tiny']
     yolo_config = train_parameters['yolo_tiny_cfg'] if ues_tiny else train_parameters['yolo_cfg']
@@ -272,9 +275,9 @@ def load_model_detect():
     anchors = yolo_config['anchors']
     anchor_mask = yolo_config['anchor_mask']
     label_dict = train_parameters['num_dict']
-    print("label_dict：", label_dict)
+    print("label_dict:", label_dict)
     class_dim = train_parameters['class_dim']
-    print("类别数：",class_dim)
+    print("class_dim:",class_dim)
     
 
 
@@ -350,7 +353,7 @@ if __name__ == "__main__":
             paddle_data_feeds1 = [tensor]
             count+=1
             outputs1 = predictor1.Run(paddle_data_feeds1)
-            print("outputs1的值：",str(outputs1))
+            print("outputs1 value:",str(outputs1))
 
 
             assert len(outputs1) == 1, 'error numbers of tensor returned from Predictor.Run function !!!'
@@ -371,21 +374,21 @@ if __name__ == "__main__":
                 labels = bboxes[:, 0].astype('int32')
                 scores = bboxes[:, 1].astype('float32')
                 boxes = bboxes[:, 2:].astype('float32')  
-                print("labels：",str(labels))
-                print("scores：",str(scores))
-                print("boxes：",str(boxes))
+                print("labels:",str(labels))
+                print("scores:",str(scores))
+                print("boxes:",str(boxes))
 
 
                 for i in range(len(labels)):
                     #if scores[i] > 0.3 :
                     #t_labels.append(label_dict[labels[i]])
                     t_labels.append(labels[i])
-                    print("t_labels：",str(t_labels))
+                    print("t_labels:",str(t_labels))
                     t_scores.append(scores[i])
-                    print("t_scores：",str(t_scores))
+                    print("t_scores:",str(t_scores))
                     center_x.append(int((boxes[i][0]+boxes[i][2])/2))
                     center_y.append((boxes[i][1]+boxes[i][3])/2)
-                    print("目标中点：",center_x,"   ",center_y)
+                    print("the center coordinate of object:",center_x,"   ",center_y)
                     STATE_value = True        
         
         
@@ -404,9 +407,43 @@ if __name__ == "__main__":
             #lib.send_cmd(vel, a)
             print(cout)
             cout=cout+1
-            print("每张照片的检测时间",time.time()-nowtime)
+            print("the time of predict:",time.time()-nowtime)
     '''
     except:
         print('error')
     finally:
         lib.send_cmd(1500, 1500)'''
+
+
+
+"""
+2020-07-16 16:59:28
+DEBUG INFO:
+114
+the time of predict: 0.052869319915771484
+Before func_expand image_shape: (128, 128, 3)
+vedio image_shape: (1, 128, 128, 3)
+predict img.shape: (1, 128, 128, 3)
+predict z.shape: (1, 128, 128, 3)
+[ 0.65283203]
+outputs1 value: [<paddlemobile.PaddleTensor object at 0x7f898c3ce0>]
+bboxes.shape (2, 6)
+labels: [1 2]
+scores: [ 0.58105469  0.125     ]
+boxes: [[   5.2265625    27.375       520.5         607.        ]
+ [  35.90625       7.70703125  519.          556.        ]]
+t_labels: [1]
+t_scores: [0.58105469]
+the center coordinate of object: [262]     [317.1875]
+t_labels: [1, 2]
+t_scores: [0.58105469, 0.125]
+the center coordinate of object: [262, 277]     [317.1875, 281.853515625]
+angle: 1591, throttle: 1535
+******************************************angle: 1591, throttle: 1535
+*******************ignore  detect
+the send buff is:
+00 aa ff 05 37 06 41 55 
+
+
+
+"""
