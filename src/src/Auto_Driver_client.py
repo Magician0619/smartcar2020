@@ -45,8 +45,8 @@ opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])
 camera = "/dev/video2"
 save_path = 'model_infer'
 
-vels  = 1535    #固定的速度，如改变则需要函数传参
-crop_size = 128     #传入yolo模型中图片的尺寸
+vels  = 1535
+crop_size = 128
 
 for opt_name,opt_value in opts:
     if opt_name in ('-h','-H'):
@@ -62,9 +62,7 @@ for opt_name,opt_value in opts:
     if opt_name in ('--camera'):
        camera = opt_value
 
-#！！！
-#注意array里面是RGB的值，不是HSV
-#！！！
+
 def load_image(cap):
 
    lower_hsv = np.array([156, 43, 46])
@@ -82,25 +80,25 @@ def load_image(cap):
    img = img.resize((128, 128), Image.ANTIALIAS)
    img = np.array(img).astype(np.float32)
    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-   img = img.transpose((2, 0, 1))   #得注意一下
+   img = img.transpose((2, 0, 1))
    img = img[(2, 1, 0), :, :] / 255.0
    img = np.expand_dims(img, axis=0)
    return img
 
 def dataset(video):
-    lower_hsv = np.array([25, 75, 190]) #深蓝色
-    upper_hsv = np.array([40, 255, 255])    #青色
+    lower_hsv = np.array([25, 75, 190])
+    upper_hsv = np.array([40, 255, 255])
     
-    select.select((video,), (), ())        # select()方法接收并监控3个通信列表
-                                           # 第1个是所有的输入的data,就是指外部发过来的数据，
-                                           # 第2个是监控和接收所有要发出去的data(outgoing data)
-                                           # 第3个监控错误信息
-    image_data = video.read_and_queue()     # 队列
+    select.select((video,), (), ())
+
+
+
+    image_data = video.read_and_queue()
 
     frame = cv2.imdecode(np.frombuffer(image_data, dtype=np.uint8), cv2.IMREAD_COLOR)
 
     '''load  128*128'''
-    #数据预处理，二值化、掩膜处理、resize、归一化
+
     hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     mask0 = cv2.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)   
     mask = mask0 #+ mask1
@@ -111,16 +109,16 @@ def dataset(video):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = img / 255.0;
     print("vedio函数中没有增加维度之前的shape",img.shape)
-    img = np.expand_dims(img, axis=0)   #扩展数组，增加一个维度
+    img = np.expand_dims(img, axis=0)
     print("vedio函数中的image_shape:",img.shape)
     '''object   256*256'''
-    img_256 = Image.fromarray(frame)    #创建图像内存
+    img_256 = Image.fromarray(frame)
     return img_256,img;
 
 #加载模型
 def load_model():
 
-    #固化模型，传入FPGA的计算能力参数
+
     valid_places =   (
 		Place(TargetType.kFPGA, PrecisionType.kFP16, DataLayoutType.kNHWC),
 		Place(TargetType.kHost, PrecisionType.kFloat),
@@ -137,8 +135,6 @@ def load_model():
     return predictor;
 
 
-#模型预测
-#z是图像的四维shape
 def predict(predictor, image, z):
     img = image; 
 
@@ -156,13 +152,13 @@ def predict(predictor, image, z):
     out = predictor.get_output(0);
     score = out.data()[0][0];
     print(out.data()[0])
-    return score;       #score其实就是预测的angle
+    return score;
 
-#以上是车道线模型
+
 
 '''##########################################################object  detect##########################################################'''
 
-#初始化训练参数
+
 train_parameters ={
     "train_list": "train.txt",
     "eval_list": "eval.txt",
@@ -170,28 +166,28 @@ train_parameters ={
     "label_dict": {},
     "num_dict": {},
     "image_count": -1,
-    "continue_train": True,     # 是否加载前一次的训练参数，接着训练
+    "continue_train": True,
     "pretrained": False,
     "pretrained_model_dir": "./pretrained-model",
     "save_model_dir": "./yolo-model",
     "model_prefix": "yolo-v3",
     "freeze_dir": "freeze_model",
     #"freeze_dir": "../model/tiny-yolov3",
-    "use_tiny": True,          # 是否使用 裁剪 tiny 模型
-    "max_box_num": 20,          # 一幅图上最多有多少个目标
+    "use_tiny": True,
+    "max_box_num": 20,
     "num_epochs": 80,
-    "train_batch_size": 32,      # 对于完整 yolov3，每一批的训练样本不能太多，内存会炸掉；如果使用 tiny，可以适当大一些
+    "train_batch_size": 32,
     "use_gpu": False,
     "yolo_cfg": {
-        "input_size": [3, 448, 448],    # 原版的边长大小为608，为了提高训练速度和预测速度，此处压缩为448
+        "input_size": [3, 448, 448],
         "anchors": [7, 10, 12, 22, 24, 17, 22, 45, 46, 33, 43, 88, 85, 66, 115, 146, 275, 240],
-        "anchor_mask": [[6, 7, 8], [3, 4, 5], [0, 1, 2]]       #预测框及其数量
+        "anchor_mask": [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
     },
     
     "yolo_tiny_cfg": {
         "input_size": [3, 256, 256],
         "anchors": [6, 8, 13, 15, 22, 34, 48, 50, 81, 100, 205, 191],
-        "anchor_mask": [[3, 4, 5], [0, 1, 2]]       #预测框及其数量
+        "anchor_mask": [[3, 4, 5], [0, 1, 2]]
     },
     "ignore_thresh": 0.7,
     "mean_rgb": [127.5, 127.5, 127.5],
@@ -202,7 +198,7 @@ train_parameters ={
     "nms_pos_k": 300,
     "valid_thresh": 0.01,
     "nms_thresh": 0.45,
-    #图像增强函数参数
+
     "image_distort_strategy": {
         "expand_prob": 0.5,
         "expand_max_ratio": 4,
@@ -215,7 +211,7 @@ train_parameters ={
         "brightness_prob": 0.5,
         "brightness_delta": 0.125
     },
-    #学习率参数设置
+
     "sgd_strategy": {
         "learning_rate": 0.002,
         "lr_epochs": [30, 50, 65],
@@ -231,10 +227,7 @@ train_parameters ={
 }
 
 def init_train_parameters():
-    """
-    初始化训练参数，主要是初始化图片数量，类别数
-    :return:
-    """
+
     file_list = "./data/data6045/train.txt"#os.path.join(train_parameters['data_dir'], train_parameters['train_list'])
     label_list =  "./data/data6045/label_list"#os.path.join(train_parameters['data_dir'], "label_list")
     index = 0
@@ -251,9 +244,9 @@ def init_train_parameters():
 
 
 def read_image():
-    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/mmmmm2.jpg"        #可能是输入图片的接口
+    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/mmmmm2.jpg"
     
-    #多线程锁
+
     lock.acquire()
     origin = Image.open(img_path)
     lock.release()  
@@ -264,11 +257,11 @@ def read_image():
     
     if img.mode != 'RGB':
         img = img.convert('RGB')
-    img = np.array(img).astype('float32').transpose((2, 0, 1))  # HWC to CHW需要注意转换格式
+    img = np.array(img).astype('float32').transpose((2, 0, 1))  # HWC to CHW
     #img = np.array(img).astype('float32')
     img -= 127.5
     img *= 0.007843
-    img = img[np.newaxis, :]        #转换坐标
+    img = img[np.newaxis, :]
     return img
 
 #加载预测模型
@@ -284,7 +277,7 @@ def load_model_detect():
     print("类别数：",class_dim)
     
 
-    #paddlemobile的配置
+
     path1 = train_parameters['freeze_dir']
     model_dir = path1
     pm_config1 = pm.PaddleMobileConfig()
@@ -307,7 +300,7 @@ if __name__ == "__main__":
     video.queue_all_buffers()
     video.start()
    
-    predictor = load_model();       #车道线识别
+    predictor = load_model();
 
 
     '''##########################################################object  detect##########################################################'''
@@ -359,7 +352,7 @@ if __name__ == "__main__":
             outputs1 = predictor1.Run(paddle_data_feeds1)
             print("outputs1的值：",str(outputs1))
 
-            # 使用断言 assert bool变量 如果True则继续执行，False则报错
+
             assert len(outputs1) == 1, 'error numbers of tensor returned from Predictor.Run function !!!'
             bboxes = np.array(outputs1[0], copy = False)
             print("bboxes.shape",bboxes.shape)
@@ -403,7 +396,7 @@ if __name__ == "__main__":
             ################################################################################################
             
             a = int(angle*600 + 1200)
-            #angle是一个阈值，最后的a才是真正的角度
+
             print("angle: %d, throttle: %d" % (a, vel))
             
             user_cmd(STATE_value,t_labels,t_scores,center_x,center_y,vel,a)
