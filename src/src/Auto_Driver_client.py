@@ -40,7 +40,7 @@ from user import user_cmd
 #script,vels,save_path= argv
 
 path = os.path.split(os.path.realpath(__file__))[0]+"/.."
-opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])  #-hH帮助指令，直接打印参数
+opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])
 
 camera = "/dev/video2"
 save_path = 'model_infer'
