@@ -82,7 +82,7 @@ def load_image(cap):
    img = img.resize((128, 128), Image.ANTIALIAS)
    img = np.array(img).astype(np.float32)
    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-   img = img.transpose((2, 0, 1))
+   img = img.transpose((2, 0, 1))   #得注意一下
    img = img[(2, 1, 0), :, :] / 255.0
    img = np.expand_dims(img, axis=0)
    return img
@@ -95,7 +95,7 @@ def dataset(video):
                                            # 第1个是所有的输入的data,就是指外部发过来的数据，
                                            # 第2个是监控和接收所有要发出去的data(outgoing data)
                                            # 第3个监控错误信息
-    image_data = video.read_and_queue()
+    image_data = video.read_and_queue()     # 队列
 
     frame = cv2.imdecode(np.frombuffer(image_data, dtype=np.uint8), cv2.IMREAD_COLOR)
 
@@ -110,13 +110,17 @@ def dataset(video):
     img = np.array(img).astype(np.float32)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = img / 255.0;
+    print("vedio函数中没有增加维度之前的shape",img.shape)
     img = np.expand_dims(img, axis=0)   #扩展数组，增加一个维度
-    print("image____shape:",img.shape)
+    print("vedio函数中的image_shape:",img.shape)
     '''object   256*256'''
     img_256 = Image.fromarray(frame)    #创建图像内存
     return img_256,img;
 
+#加载模型
 def load_model():
+
+    #固化模型，传入FPGA的计算能力参数
     valid_places =   (
 		Place(TargetType.kFPGA, PrecisionType.kFP16, DataLayoutType.kNHWC),
 		Place(TargetType.kHost, PrecisionType.kFloat),
@@ -131,27 +135,34 @@ def load_model():
     config.set_valid_places(valid_places);
     predictor = CreatePaddlePredictor(config);
     return predictor;
-    
+
+
+#模型预测
+#z是图像的四维shape
 def predict(predictor, image, z):
     img = image; 
 
     i = predictor.get_input(0);
     i.resize((1, 3, 128, 128));
-    print("****************************img",img.shape)
-    print("****************************img",z.shape)
+    print("predict函数中的img",img.shape)
+    print("predict中的z",z.shape)
     z[ 0,0:img.shape[1], 0:img.shape[2] + 0, 0:img.shape[3]] = img
     z = z.reshape(1, 3, 128, 128);
     frame1 = cv2.imdecode(np.frombuffer(img, dtype=np.uint8), cv2.IMREAD_COLOR)
-    cv2.imwrite("zzzzz_test.jpg", frame1)
+    cv2.imwrite("first_frame.jpg", frame1)
     i.set_data(z)
 
     predictor.run();
     out = predictor.get_output(0);
     score = out.data()[0][0];
     print(out.data()[0])
-    return score;
+    return score;       #score其实就是预测的angle
+
+#以上是车道线模型
+
 '''##########################################################object  detect##########################################################'''
 
+#初始化训练参数
 train_parameters ={
     "train_list": "train.txt",
     "eval_list": "eval.txt",
@@ -174,12 +185,13 @@ train_parameters ={
     "yolo_cfg": {
         "input_size": [3, 448, 448],    # 原版的边长大小为608，为了提高训练速度和预测速度，此处压缩为448
         "anchors": [7, 10, 12, 22, 24, 17, 22, 45, 46, 33, 43, 88, 85, 66, 115, 146, 275, 240],
-        "anchor_mask": [[6, 7, 8], [3, 4, 5], [0, 1, 2]]
+        "anchor_mask": [[6, 7, 8], [3, 4, 5], [0, 1, 2]]       #预测框及其数量
     },
+    
     "yolo_tiny_cfg": {
         "input_size": [3, 256, 256],
         "anchors": [6, 8, 13, 15, 22, 34, 48, 50, 81, 100, 205, 191],
-        "anchor_mask": [[3, 4, 5], [0, 1, 2]]
+        "anchor_mask": [[3, 4, 5], [0, 1, 2]]       #预测框及其数量
     },
     "ignore_thresh": 0.7,
     "mean_rgb": [127.5, 127.5, 127.5],
@@ -190,6 +202,7 @@ train_parameters ={
     "nms_pos_k": 300,
     "valid_thresh": 0.01,
     "nms_thresh": 0.45,
+    #图像增强函数参数
     "image_distort_strategy": {
         "expand_prob": 0.5,
         "expand_max_ratio": 4,
@@ -202,11 +215,13 @@ train_parameters ={
         "brightness_prob": 0.5,
         "brightness_delta": 0.125
     },
+    #学习率参数设置
     "sgd_strategy": {
         "learning_rate": 0.002,
         "lr_epochs": [30, 50, 65],
         "lr_decay": [1, 0.5, 0.25, 0.1]
     },
+
     "early_stop": {
         "sample_frequency": 50,
         "successive_limit": 3,
@@ -214,6 +229,7 @@ train_parameters ={
         "min_curr_map": 0.84
     }
 }
+
 def init_train_parameters():
     """
     初始化训练参数，主要是初始化图片数量，类别数
@@ -235,8 +251,9 @@ def init_train_parameters():
 
 
 def read_image():
-    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/mmmmm2.jpg"
+    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/mmmmm2.jpg"        #可能是输入图片的接口
     
+    #多线程锁
     lock.acquire()
     origin = Image.open(img_path)
     lock.release()  
@@ -247,11 +264,14 @@ def read_image():
     
     if img.mode != 'RGB':
         img = img.convert('RGB')
-    img = np.array(img).astype('float32').transpose((2, 0, 1))  # HWC to CHW
+    img = np.array(img).astype('float32').transpose((2, 0, 1))  # HWC to CHW需要注意转换格式
+    #img = np.array(img).astype('float32')
     img -= 127.5
     img *= 0.007843
-    img = img[np.newaxis, :]
+    img = img[np.newaxis, :]        #转换坐标
     return img
+
+#加载预测模型
 def load_model_detect():
     ues_tiny = train_parameters['use_tiny']
     yolo_config = train_parameters['yolo_tiny_cfg'] if ues_tiny else train_parameters['yolo_cfg']
@@ -259,8 +279,12 @@ def load_model_detect():
     anchors = yolo_config['anchors']
     anchor_mask = yolo_config['anchor_mask']
     label_dict = train_parameters['num_dict']
+    print("label_dict：", label_dict)
     class_dim = train_parameters['class_dim']
+    print("类别数：",class_dim)
     
+
+    #paddlemobile的配置
     path1 = train_parameters['freeze_dir']
     model_dir = path1
     pm_config1 = pm.PaddleMobileConfig()
@@ -283,7 +307,9 @@ if __name__ == "__main__":
     video.queue_all_buffers()
     video.start()
    
-    predictor = load_model();
+    predictor = load_model();       #车道线识别
+
+
     '''##########################################################object  detect##########################################################'''
     init_train_parameters()
     predictor1 = load_model_detect()    
@@ -331,7 +357,9 @@ if __name__ == "__main__":
             paddle_data_feeds1 = [tensor]
             count+=1
             outputs1 = predictor1.Run(paddle_data_feeds1)
+            print("outputs1的值：",str(outputs1))
 
+            # 使用断言 assert bool变量 如果True则继续执行，False则报错
             assert len(outputs1) == 1, 'error numbers of tensor returned from Predictor.Run function !!!'
             bboxes = np.array(outputs1[0], copy = False)
             print("bboxes.shape",bboxes.shape)
@@ -350,13 +378,21 @@ if __name__ == "__main__":
                 labels = bboxes[:, 0].astype('int32')
                 scores = bboxes[:, 1].astype('float32')
                 boxes = bboxes[:, 2:].astype('float32')  
+                print("labels：",str(labels))
+                print("scores：",str(scores))
+                print("boxes：",str(boxes))
+
+
                 for i in range(len(labels)):
                     #if scores[i] > 0.3 :
                     #t_labels.append(label_dict[labels[i]])
                     t_labels.append(labels[i])
+                    print("t_labels：",str(t_labels))
                     t_scores.append(scores[i])
+                    print("t_scores：",str(t_scores))
                     center_x.append(int((boxes[i][0]+boxes[i][2])/2))
                     center_y.append((boxes[i][1]+boxes[i][3])/2)
+                    print("目标中点：",center_x,"   ",center_y)
                     STATE_value = True        
         
         
@@ -367,6 +403,7 @@ if __name__ == "__main__":
             ################################################################################################
             
             a = int(angle*600 + 1200)
+            #angle是一个阈值，最后的a才是真正的角度
             print("angle: %d, throttle: %d" % (a, vel))
             
             user_cmd(STATE_value,t_labels,t_scores,center_x,center_y,vel,a)
@@ -374,7 +411,7 @@ if __name__ == "__main__":
             #lib.send_cmd(vel, a)
             print(cout)
             cout=cout+1
-            print("*****************************************",time.time()-nowtime)
+            print("每张照片的检测时间",time.time()-nowtime)
     '''
     except:
         print('error')
