@@ -30,9 +30,8 @@ opts,args = getopt.getopt(argv[1:],'-hH',['save_path=','vels=','camera='])
 
 camera = "/dev/video2"
 save_path = 'model_infer'
-vels  = 1535        #如果需要速度环的话，需要写成函数的形式再返回参数
+vels  = 1535
 crop_size = 128
-
 for opt_name,opt_value in opts:
     if opt_name in ('-h','-H'):
         print("python3 Auto_Driver.py --save_path=%s  --vels=%d --camera=%s "%(save_path , vels , camera))
@@ -46,32 +45,30 @@ for opt_name,opt_value in opts:
        
     if opt_name in ('--camera'):
        camera = opt_value
+#def load_image(cap):
 
-def load_image(cap):
-
-   lower_hsv = np.array([156, 43, 46])      #绿色
-   upper_hsv = np.array([180, 255, 255])        #天蓝色
-   lower_hsv1 = np.array([0, 43, 46])       #红色
-   upper_hsv1 = np.array([10, 255, 255])    #亮橙色
-   ref, frame = cap.read()
+#    lower_hsv = np.array([156, 43, 46])
+#    upper_hsv = np.array([180, 255, 255])
+#    lower_hsv1 = np.array([0, 43, 46])
+#    upper_hsv1 = np.array([10, 255, 255])
+#    ref, frame = cap.read()
 
 
-   hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
-   mask0 = cv2.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)
-   mask1 = cv2.inRange(hsv, lowerb=lower_hsv1, upperb=upper_hsv1)
-   mask = mask0 + mask1
-   img = Image.fromarray(mask)
-   img = img.resize((128, 128), Image.ANTIALIAS)
-   img = np.array(img).astype(np.float32)
-   img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
-   img = img.transpose((2, 0, 1))
-   img = img[(2, 1, 0), :, :] / 255.0
-   img = np.expand_dims(img, axis=0)
-   return img
-
+#    hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)   
+#    mask0 = cv2.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)
+#    mask1 = cv2.inRange(hsv, lowerb=lower_hsv1, upperb=upper_hsv1)
+#    mask = mask0 + mask1
+#    img = Image.fromarray(mask)
+#    img = img.resize((128, 128), Image.ANTIALIAS)
+#    img = np.array(img).astype(np.float32)
+#    img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
+#    img = img.transpose((2, 0, 1))
+#    img = img[(2, 1, 0), :, :] / 255.0
+#    img = np.expand_dims(img, axis=0)
+#    return img
 def dataset(video):
-    lower_hsv = np.array([20, 75, 165])     #橙色  FF8F40
-    upper_hsv = np.array([40, 255, 255])        #橙黄色  FFAA00
+    lower_hsv = np.array([25, 75, 190])
+    upper_hsv = np.array([40, 255, 255])
     
     select.select((video,), (), ())        
     image_data = video.read_and_queue()
@@ -90,7 +87,7 @@ def dataset(video):
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = img / 255.0;
     img = np.expand_dims(img, axis=0)
-    print("image_shape:",img.shape)
+    print("image____shape:",img.shape)
     return img;
 
 def load_model():
@@ -125,7 +122,7 @@ def predict(predictor, image, z):
     predictor.run();
     out = predictor.get_output(0);
     score = out.data()[0][0];
-    print(out.data()[0])
+    print("score" + str(out.data()[0]))
     return score;
 if __name__ == "__main__":
     cout = 0
