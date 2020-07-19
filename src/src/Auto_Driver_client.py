@@ -432,7 +432,7 @@ labels: [1 2]
 scores: [ 0.58105469  0.125     ]
 boxes: [[   5.2265625    27.375       520.5         607.        ]
  [  35.90625       7.70703125  519.          556.        ]]
-t_labels: [1]
+t_labels: [1]·
 t_scores: [0.58105469]
 the center coordinate of object: [262]     [317.1875]
 t_labels: [1, 2]
