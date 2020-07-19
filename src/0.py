@@ -1,3 +1,11 @@
+'''
+@Author: Magician
+@Date: 2020-07-05 20:21:19
+@LastEditors: HK
+@LastEditTime: 2020-07-19 23:01:07
+@Description: file content
+@FilePath: \smartcar2020\src\0.py
+'''
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
@@ -60,9 +68,9 @@ def save_vedio_process(Camera):
 
     video.create_buffers(1)
     video.queue_all_buffers()
+    video.set_format(424,240, fourcc='XVID')
     video.start() 
     
-    video.set_format(424,240, fourcc='XVID')
     #video.set_format(160,120, fourcc='MJPG')
     out = cv2.VideoWriter('save.avi',vedio,20,(420,240))   #name,frame rate,format
 
