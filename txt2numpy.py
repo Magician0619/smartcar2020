@@ -6,7 +6,7 @@
 @Description: file content
 @FilePath: \smartcar2020\src\txt2numpy.py
 '''
-path = "C:/Users/Lenovo/Desktop/fsdownload/data" 
+path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/0721晚上赛道线-ljc/6/data" 
 
 import numpy as np
 

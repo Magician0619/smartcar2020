@@ -12,8 +12,9 @@ import os
 import re
 
 #将src中的文件批处理命名放到dst中
-src_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/1/data/img"
-dst_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/5/data/img"
+#C:\Users\Lenovo\Desktop\0721晚上赛道线-ljc\0721晚上赛道线-ljc\1\data\img
+src_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/0721晚上赛道线-ljc/5/data/img"
+dst_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/0721晚上赛道线-ljc/6/data/img"
 
 srclist = os.listdir(src_path)   #获取文件路径
 src_num = len(srclist)  #获取文件长度（个数）
