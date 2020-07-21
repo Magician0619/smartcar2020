@@ -1,44 +1,39 @@
 # -*- coding:utf8 -*-
 
 '''
-@Author: Magician
-@Date: 2020-07-17 21:46:56
-@LastEditors: HK
-@LastEditTime: 2020-07-20 22:53:19
-@Description: 批量重命名图片
-'''
+#@Author: Magician
+#@Date: 
+#@Description: file rename in correct order
 
+Copyright 2020 by Magician
+'''
 
 import os
 import re
 
-class BatchRename():
-    '''
-    批量重命名文件夹中的图片文件
+#将src中的文件批处理命名放到dst中
+src_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/1/data/img"
+dst_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/5/data/img"
 
-    '''
-    def __init__(self):
-        # self.path = "E:/智能车/人工智能组资料/人工智能创意赛复赛/数据集/赛道线/车道线0717未加红绿灯/data/img" #表示需要命名处理的文件夹
-        self.path ="E:/智能车/人工智能组资料/人工智能创意赛复赛/数据集/赛道线/车道线0720中午 (2)/data/img"
+srclist = os.listdir(src_path)   #获取文件路径
+src_num = len(srclist)  #获取文件长度（个数）
 
-    def rename(self):
-        filelist = os.listdir(self.path)   #获取文件路径
-        total_num = len(filelist)  #获取文件长度（个数）
-        i = 12205  #表示文件的命名是从12921开始的
-        for item in filelist:
-            # for j in os.listdir(r"./file"):               
-            if item.endswith('.jpg'):  #初始的图片的格式为jpg格式的（或者源文件是png格式及其他格式，后面的转换格式就可以调整为自己需要的格式即可）
-                src = os.path.join(os.path.abspath(self.path), item)
-                dst = os.path.join(os.path.abspath(self.path),  format(str(i)) + '.jpg')#处理后的格式也为jpg格式的，当然这里可以改成png格式
-                # 这种情况下的命名格式为xn000.jpg形式，可以自主定义想要的格式
-                try:
-                    os.rename(src, dst)
-                    #print ('converting %s to %s ...' % (src, dst))
-                    i = i + 1
-                except:
-                    continue
-        #print ('total %d to rename & converted %d jpgs' % (total_num, i))
+dstlist = os.listdir(dst_path)   #获取文件路径
+dst_num = len(dstlist)  #获取文件长度（个数）
 
-if __name__ == '__main__':
-    demo = BatchRename()
-    demo.rename()
+#src文件夹中文件最好要比dst中的要少，不要引起重名的情况！！！
+
+def img_rename( ):
+
+    for j in range(src_num):
+        src = str(j) +'.jpg'
+        dst = str(dst_num+j) +'.jpg'
+        if src in srclist:
+            
+            src = os.path.join(os.path.abspath(src_path), src)
+            dst = os.path.join(os.path.abspath(dst_path),  dst)
+            
+            os.rename(src, dst)
+
+if __name__=='__main__':
+    img_rename()
