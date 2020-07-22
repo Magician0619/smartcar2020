@@ -1,43 +1,42 @@
-'''
-@Author: Magician
-@Date: 2020-07-20 22:54:03
-@LastEditors: HK
-@LastEditTime: 2020-07-20 23:08:38
-@Description: file content
-@FilePath: \smartcar2020\renamev1.0.py
-'''
 # -*- coding:utf8 -*-
 
 '''
-@Author: Magician
-@Date: 2020-07-17 21:46:56
-@LastEditors: HK
-@LastEditTime: 2020-07-18 09:42:29
-@Description: 批量重命名图片
+#@Author: Magician
+#@Date: 
+#@Description: file rename in correct order
+
+Copyright 2020 by Magician
 '''
-
-
-
 
 import os
 import re
 
+#将src中的文件批处理命名放到dst中
+#C:\Users\Lenovo\Desktop\0721晚上赛道线-ljc\0721晚上赛道线-ljc\1\data\img
+#C:\Users\Lenovo\Desktop\fsdownload\1\img
+#C:/Users/Lenovo/Desktop/fsdownload/3/img
+src_path = "C:/Users/Lenovo/Desktop/fsdownload/7/img"
+dst_path = "C:/Users/Lenovo/Desktop/0721晚上赛道线-ljc/0721晚上赛道线-ljc/6/data/img"
 
-#E:\智能车\人工智能组资料\人工智能创意赛复赛\数据集\赛道线\车道线20圈下午\data\img
-src_path = "E:/智能车/人工智能组资料/人工智能创意赛复赛/数据集/赛道线/车道线0720中午 (3)/data/img"
-dst_path = "E:/智能车/人工智能组资料/人工智能创意赛复赛/数据集/赛道线/车道线20圈下午/data/img"
+srclist = os.listdir(src_path)   #获取文件路径
+src_num = len(srclist)  #获取文件长度（个数）
 
-filelist = os.listdir(src_path)   #获取文件路径
-total_num = len(filelist)  #获取文件长度（个数）
-i = 12205  #表示文件的命名是从1开始的
-for j in range(8043):  #多少个项目
-    item = str(j) +'.jpg'
-    it = str(i+j) +'.jpg'
-    if item in filelist:
-        
-        src = os.path.join(os.path.abspath(src_path), item)
-        dst = os.path.join(os.path.abspath(dst_path),  it)#处理后的格式也为jpg格式的，当然这里可以改成png格式
-        # 这种情况下的命名格式为xn000.jpg形式，可以自主定义想要的格式
+dstlist = os.listdir(dst_path)   #获取文件路径
+dst_num = len(dstlist)  #获取文件长度（个数）
 
-        os.rename(src, dst)
-     
+#src文件夹中文件最好要比dst中的要少，不要引起重名的情况！！！
+
+def img_rename( ):
+
+    for j in range(src_num):
+        src = str(j) +'.jpg'
+        dst = str(dst_num+j) +'.jpg'
+        if src in srclist:
+            
+            src = os.path.join(os.path.abspath(src_path), src)
+            dst = os.path.join(os.path.abspath(dst_path),  dst)
+            
+            os.rename(src, dst)
+
+if __name__=='__main__':
+    img_rename()
