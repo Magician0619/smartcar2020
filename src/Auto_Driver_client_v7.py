@@ -428,7 +428,10 @@ if __name__ == "__main__":
                 tensor_img = tensor_img[np.newaxis, :]
 
                 cv2.imwrite("tensor.jpg",tensor_img)
-                exit(0)
+
+                img = read_image("carline.jpg")
+
+                # exit(0)
 
 
                 tensor = pm.PaddleTensor()

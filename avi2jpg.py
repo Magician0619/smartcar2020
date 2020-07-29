@@ -7,7 +7,7 @@ images = './image/'  ##保存路径
 if not os.path.exists(images):
     os.mkdir(images)
  
-cap = cv2.VideoCapture("save(1).avi") #视频位置
+cap = cv2.VideoCapture("save.avi") #视频位置
 c=0
 while(1):
     success, frame = cap.read()

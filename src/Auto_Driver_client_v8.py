@@ -1,13 +1,12 @@
 # -*- coding:utf-8 -*-
-
 '''
-#@Author: Magician
-#@Date: 2020-07-24 08:38:13
-#@Description: By over write and read, and complete the framwork of the car originally.
-
-Copyright 2020 by Magician
+@Author: Magician
+@Date: 2020-07-19 23:00:54
+@LastEditors: HK
+@LastEditTime: 2020-07-24 09:51:22
+@Description: file content
+@FilePath: \smartcar2020\src\Auto_Driver_client_v7.py
 '''
-
 
 import os
 import v4l2capture
@@ -24,9 +23,9 @@ import threading
 import paddlemobile as pm
 from paddlelite import *
 import codecs
-#import paddle
+import paddle
 import multiprocessing
-#import paddle.fluid as fluid
+import paddle.fluid as fluid
 #from IPython.display import display
 import math
 import functools
@@ -49,21 +48,14 @@ save_path = 'model_infer'
 # car character
 vels  = 1550
 crop_size = 128
-recog_rate = 0.
+recog_rate = 0.7
 # recog classes
 classes = 6
-label_dict = {0:"n/limit",1:"limit",2:"park",3:"red",4:"green",5:"zebra",6:"straight",7:"barrier"}
-DEBUG_MODE = True
-
-def output(s):
-    global DEBUG_MODE
-    if DEBUG_MODE == True:
-        print(s)
 ### GLOBAL DEFINITION END
 
 for opt_name,opt_value in opts:
     if opt_name in ('-h','-H'):
-        output("python3 Auto_Driver.py --save_path=%s  --vels=%d --camera=%s "%(save_path , vels , camera))
+        print("python3 Auto_Driver.py --save_path=%s  --vels=%d --camera=%s "%(save_path , vels , camera))
         exit()
 
     if opt_name in ('--save_path'):
@@ -97,7 +89,6 @@ def load_image(cap):
    img = img[(2, 1, 0), :, :] / 255.0
    img = np.expand_dims(img, axis=0)
    return img
-   
 
 def dataset(video):
     lower_hsv = np.array([25, 75, 190])
@@ -120,12 +111,12 @@ def dataset(video):
     img = np.array(img).astype(np.float32)
     img = cv2.cvtColor(img, cv2.COLOR_GRAY2BGR)
     img = img / 255.0;
-    #output("Before func_expand image_shape:",img.shape)
+    print("Before func_expand image_shape:",img.shape)
     img = np.expand_dims(img, axis=0)
-    #output("vedio image_shape:",img.shape)
+    print("vedio image_shape:",img.shape)
     '''object   256*256'''
     img_256 = Image.fromarray(frame)
-    return img_256,img,frame;
+    return img_256,img;
 
 #*************
 #car line
@@ -154,8 +145,8 @@ def predict(predictor, image, z):
 
     i = predictor.get_input(0);
     i.resize((1, 3, 128, 128));
-    #output("predict img.shape:",img.shape)
-    #output("predict z.shape:",z.shape)
+    print("predict img.shape:",img.shape)
+    print("predict z.shape:",z.shape)
     z[ 0,0:img.shape[1], 0:img.shape[2] + 0, 0:img.shape[3]] = img
     z = z.reshape(1, 3, 128, 128);
     frame1 = cv2.imdecode(np.frombuffer(img, dtype=np.uint8), cv2.IMREAD_COLOR)
@@ -165,7 +156,7 @@ def predict(predictor, image, z):
     predictor.run();
     out = predictor.get_output(0);
     score = out.data()[0][0];
-    output(out.data()[0])
+    print(out.data()[0])
     return score;
 
 
@@ -258,10 +249,13 @@ def init_train_parameters():
         train_parameters['image_count'] = len(lines)
 
 
-def read_image(img_path):
-    #lock.acquire()
+def read_image():
+    img_path = "/home/root/workspace/deepcar/deeplearning_python/src/read.jpg"
+
+
+    lock.acquire()
     origin = Image.open(img_path)
-    #lock.release()
+    lock.release()
 
     #origin = image
     #img = resize_img(origin, target_size)
@@ -276,7 +270,7 @@ def read_image(img_path):
     img = img[np.newaxis, :]
     return img
 
-
+'''
 def load_model_detect():
     ues_tiny = train_parameters['use_tiny']
     yolo_config = train_parameters['yolo_tiny_cfg'] if ues_tiny else train_parameters['yolo_cfg']
@@ -284,9 +278,11 @@ def load_model_detect():
     anchors = yolo_config['anchors']
     anchor_mask = yolo_config['anchor_mask']
     label_dict = train_parameters['num_dict']
-    #output("label_dict:", label_dict)
+    #print("label_dict:", label_dict)
     class_dim = train_parameters['class_dim']
-    #output("class_dim:",class_dim)
+    #print("clas s_dim:",class_dim)
+
+
 
     path1 = train_parameters['freeze_dir']
     model_dir = path1
@@ -298,38 +294,65 @@ def load_model_detect():
     pm_config1.model_dir = model_dir
     pm_config1.thread_num = 4
     predictor1 = pm.CreatePaddlePredictor(pm_config1)
-    # Cxx
-    # valid_places =   (
-	# 	Place(TargetType.kFPGA, PrecisionType.kFP16, DataLayoutType.kNHWC),
-	# 	Place(TargetType.kFPGA, PrecisionType.kInt8),
-	# 	Place(TargetType.kFPGA, PrecisionType.kInt16),
-	# );
-    # model_dir = "/home/root/workspace/deepcar/deeplearning_python/model/detect_model_infer"
-    # config = CxxConfig();
-    # config.set_model_file(model_dir+"/model");
-    # config.set_param_file(model_dir+"/params");
-    # #config.model_dir = model_dir
-    # config.set_valid_places(valid_places);
-    # predictor = CreatePaddlePredictor(config);
 
     return predictor1
+'''
+
+def replace_infer():
+    """
+    预测，将结果保存到一副新的图片中
+    :param image_path:
+    :return:
+    """
+    origin, tensor_img, resized_img = dataset() #通过read_image()进行图像预处理
+
+    #input_w, input_h =256,256
+    input_w, input_h = origin.size[0], origin.size[1]
+    image_shape = np.array([input_h, input_w], dtype='int32')
+    print("image shape high:{0}, width:{1}".format(input_h, input_w))
+    #t1 = time.time()
+    batch_outputs = exe.run(inference_program,
+                            feed={feed_target_names[0]: tensor_img,
+                                  feed_target_names[1]: image_shape[np.newaxis, :]},
+                            fetch_list=fetch_targets,
+                            return_numpy=False)
+    #period = time.time() - t1
+    print("predict cost time:{0}".format("%2.2f sec" % period))
+    bboxes = np.array(batch_outputs[0])
+    print("np格式的bboxes为:",bboxes) #np数字的bboxes值
+
+    if bboxes.shape[1] != 6:
+        print("No object found.")
+        return
+    labels = bboxes[:, 0].astype('int32')
+    scores = bboxes[:, 1].astype('float32')
+    print("score:{}".format(scores))
+    print("label:{}".format(labels))
+    boxes = bboxes[:, 2:].astype('float32') ##将bbox转化为浮点数
+    print("pre box",boxes)
+    
+    last_dot_index = image_path.rfind('.')
+    out_path = image_path[:last_dot_index]
+    out_path += '-result.jpg'
+    ##在图像中将bbox画出来
+    draw_bbox_image(origin, boxes, labels, out_path)
+
 
 ### process frame adding labels,scores,boxes
 # return frame
 def process_frame(img,labels,scores,boxes):
-    x_rate = 320.0 / 608
-    y_rate = 240.0 / 608
-    #boxes = boxes[:,2:].astype('float32')
-    d = img
-    output(boxes)
+    # img -> ndarray ()
     for label, box,score in zip(labels,boxes,scores):
-        #output("label:",label_dict[int(label)])
-        if score < recog_rate:
-            continue
+        #print("label:",label_dict[int(label)])
         xmin, ymin, xmax, ymax = box[0], box[1], box[2], box[3]
-        d = cv2.rectangle(img, (int(box[0]*x_rate), int(box[1]*y_rate)), ( int(box[2]*x_rate),int(box[3]*y_rate)), (255, 255, 0), 1)
-        d = cv2.putText(img, label_dict[int(label)]+":"+str(score), (int(box[0]*x_rate), int(box[3]*y_rate)), cv2.FONT_HERSHEY_PLAIN, 2, (0, 255, 0), 1)
-    return d   
+        #draw.rectangle((xmin, ymin, xmax, ymax), None, 'red')
+        #draw.text((xmin, ymin), str(label)+","+str(score), (255, 255, 0))
+        x_rate = 320.0 / 608
+        y_rate = 240.0 / 608
+        cv2.rectangle(img, (box[0] * x_rate, box[1]* y_rate), ( box[2]* x_rate,box[3]*y_rate), (255, 255, 0), 5)
+        cv2.putText(img, str(label)+":"+str(score), (box[0] * x_rate, box[1] * y_rate), cv.FONT_HERSHEY_PLAIN, 5, (0, 255, 0), 10)
+
+
 
 if __name__ == "__main__":
     cout = 0
@@ -345,8 +368,8 @@ if __name__ == "__main__":
 
     '''##########################################################object  detect##########################################################'''
     init_train_parameters()
-    detect_predictor = load_model_detect()
-
+    # detect_predictor = load_model_detect()
+    replace_infer(vedio)
     vel = int(vels)
     lib_path = path + "/lib" + "/libart_driver.so"
     so = cdll.LoadLibrary
@@ -358,22 +381,15 @@ if __name__ == "__main__":
         pass
     #try:
     # start speed
-    #output("sending speed value:",vels)
+    print("sending speed value:",vels)
     lib.send_cmd(1500,0)
     lib.send_cmd(0, vels)
+    # reset ZEBRA and RED and GREEN
+    ZEBRA_SIGN = False
+    RED_SIGN = False
+    GREEN_SIGN = False
     # most possible status
-    out = cv2.VideoWriter('save.avi',cv2.VideoWriter_fourcc(*'MJPG'),20,(320,240))
-    # labels in no_limit(0),limit(1),park(2),red(3),green(4),zebra(5),block(6)
-    ### DEFINITION END
-    NO_LIMIT = 0
-    LIMIT = 1
-    PARK = 2
-    RED = 3
-    GREEN = 4
-    ZEBRA = 5
-    STAIGHT = 6
-    BLOCK = 7
-    #### DEFINITION
+    out = cv2.VideoWriter('predict.avi',video,20,(320,240))
     try:
         while 1:
             count =0
@@ -384,74 +400,70 @@ if __name__ == "__main__":
             ### SIGN DEFINITION START
             # judge zebra line
             zebra_line_detected = False
-            # reset ZEBRA and RED and GREEN
-            STATUS_LIMIT = False
-            STATUS_PARK = False
+            # labels in no_limit(0),limit(1),park(2),red(3),green(4),zebra(5),block(6)
+            ### DEFINITION END
+            NO_LIMIT = 0
+            LIMIT = 1
+            PARK = 2
+            RED = 3
+            GREEN = 4
+            ZEBRA = 5
+            BLOCK = 6
+            #### DEFINITION
             while 1:
-                ZEBRA_SIGN = False
-                RED_SIGN = False
-                GREEN_SIGN = False
-                LIMIT_SIGN = False
-                NO_LIMIT_SIGN = False
                 nowtime= time.time()
-                origin,img,frame = dataset(video)
+                origin,img = dataset(video)
                 z = np.zeros((1, 128, 128, 3))
-                # STEP 1: ANGLE
                 angle = predict(carline_predictor, img, z)
-
-                
-                # DISABLE DETECTION
-                #output("angle:",angle)
-                #lib.send_cmd(int(700+1600*angle),0)
-                #continue
 
                 #tensor_img,img= read_image()  #  resize image
 
                 tensor_img = origin.resize((256,256), Image.BILINEAR)   #######resize 256*256
-                tensor_img.mode = 'BGR'
+
                 if tensor_img.mode != 'RGB':
-                    #    tensor_img = cv2.cvtColor(Image.fromarray(tensor_img),cv2.COLOR_RGB2BGR)
                     tensor_img = tensor_img.convert('RGB')
-                    #    print(type(tensor_img))
-                print("mode:",tensor_img.mode)
-                tensor_img = np.array(tensor_img).astype('float32')#.transpose((2, 0, 1))  # HWC to CHW
+                tensor_img = np.array(tensor_img).astype('float32').transpose((2, 0, 1))  # HWC to CHW
                 tensor_img -= 127.5
                 tensor_img *= 0.007843
-                show_img = tensor_img
-                #tensor_img = tensor_img[np.newaxis, :]
-                
-                #print(type(tensor_img))
-                #print(tensor_img.shape)
-                #tensor_img = tensor_img.convert('RGB')
-                #tensor_img = cv2.cvtColor(np.asarray(tensor_img),cv2.COLOR_BGR2RGBA)
-                
-                #tensor_img = cv2.cvtColor(tensor_img,cv2.COLOR_RGB2BGR)
-                # cv2.namedWindow("boot", cv2.WINDOW_AUTOSIZE)    
-                # cv2.imshow('FRAME',show_img)
-                # cv2.waitKey(0)
-                # cv2.destroyAllWindows("FRAME")
-                
-            
-                #exit(0)
-                cv2.imwrite("carline.jpg",frame)
-                img = read_image("carline.jpg")
-                
-                print("shape",tensor_img.shape)
-                #print("origin",tensor_img)
-                #print("after",tensor_img)
+                tensor_img = tensor_img[np.newaxis, :]
+
+                # cv2.imwrite("tensor.jpg",tensor_img)
+                bull_success, buffer = cv2.imencode(".jpg", tensor_img)
+                io_buf = io.BytesIO(buffer)
+                #img = read_image("carline.jpg")
+                decode_img = cv2.imdecode(np.frombuffer(io_buf.getbuffer(), 3), -1)
+                print(np.allclose(img, decode_img))
+                img  = read_image(decode_img)
+                print("after decode info:",img)
+                print(type(img))
+                print(img.shape)
+
+                # exit(0)
+
+                '''
+                img = np.ones((100, 100), np.uint8)
+                # encode
+                is_success, buffer = cv2.imencode(".jpg", img)
+                io_buf = io.BytesIO(buffer)
+                # decode
+                decode_img = cv2.imdecode(np.frombuffer(io_buf.getbuffer(), np.uint8), -1)
+                print(np.allclose(img, decode_img))   # True
+                '''
+
+
                 tensor = pm.PaddleTensor()
                 tensor.dtype =pm.PaddleDType.FLOAT32
                 tensor.shape  = (1,3,256,256)
-                tensor.data = pm.PaddleBuf(img)
+                tensor.data = pm.PaddleBuf(tensor_img)
                 paddle_data_feeds1 = [tensor]
                 count+=1
                 outputs1 = detect_predictor.Run(paddle_data_feeds1)
-                #output("outputs1 value:", str(outputs1))
+                #print("outputs1 value:", str(outputs1))
 
 
                 assert len(outputs1) == 1, 'error numbers of tensor returned from Predictor.Run function !!!'
                 bboxes = np.array(outputs1[0], copy = False)
-                #output("bboxes.shape",bboxes.shape)
+                #print("bboxes.shape",bboxes.shape)
 
                 t_labels = []
                 t_scores = []
@@ -463,19 +475,19 @@ if __name__ == "__main__":
                 final_score = 0.0
 
                 if len(bboxes.shape) == 1 :
-                    output("No object found in video")
+                    print("No object found in video")
                     STATE_value =False
                 else:
                     STATE_value = False
-                    labels = bboxes[:, 0].astype('int32')
+                    labels = bboxes[:, 0].astype('int32') % classes
                     # scores -> angle , true_angle = 500 + 2000*scores
                     scores = bboxes[:, 1].astype('float32')
                     # pixels position
                     boxes = bboxes[:, 2:].astype('float32')
-                    # print("labels:",str(labels))
-                    # print("scores:",str(scores))
-                    # print("boxes:", str(boxes))
-                    frame = process_frame(frame,labels,scores,boxes)
+                    print("labels:",str(labels))
+                    print("scores:",str(scores))
+                    print("boxes:", str(boxes))
+                    process_frame(origin,labels,scores,boxes)
                     ### start algorithm
                     # <- final_label
                     for i in range(len(labels)):
@@ -488,10 +500,6 @@ if __name__ == "__main__":
                                 RED_SIGN = True
                             elif labels[i] == GREEN:
                                 GREEN_SIGN = True
-                            elif labels[i] == LIMIT:
-                                LIMIT_SIGN = True
-                            elif labels[i] == NO_LIMIT:
-                                NO_LIMIT_SIGN = True
                             else:
                                 # process
                                 if scores[i] > final_score:
@@ -499,12 +507,12 @@ if __name__ == "__main__":
                                     final_score = scores[i]
                                 # collect infos, of no use currently
                                 t_labels.append(labels[i])
-                                #output("t_labels:",str(t_labels))
+                                print("t_labels:",str(t_labels))
                                 t_scores.append(scores[i])
-                                #output("t_scores:",str(t_scores))
+                                print("t_scores:",str(t_scores))
                                 center_x.append(int((boxes[i][0]+boxes[i][2])/2))
                                 center_y.append((boxes[i][1]+boxes[i][3])/2)
-                                #output("the center coordinate of object:", center_x, "   ", center_y)
+                                print("the center coordinate of object:", center_x, "   ", center_y)
 
                     STATE_value = True
 
@@ -515,76 +523,31 @@ if __name__ == "__main__":
                 # calculate true angle
                 true_angle = int(angle * 1600 + 700)
                 # Judge SIGN
-                if RED_SIGN == True:# and ZEBRA_SIGN == True:
-                    # cv2.imwrite("red.jpg",tensor_img)
+                if RED_SIGN == True and ZEBRA_SIGN == True:
                     # V2: only recognize both SIGNs
                     final_label = PARK
-                    STATUS_PARK = True
-                if GREEN_SIGN == True and STATUS_PARK == True:
-                    # cv2.imwrite("green.jpg",tensor_img)
-                    if final_label != LIMIT:
-                        final_label = NO_LIMIT 
-                if LIMIT_SIGN == True:
-                    final_label = LIMIT
-                    STATUS_LIMIT = True
-                    STATUS_PARK = False
-                if NO_LIMIT_SIGN == True and STATUS_LIMIT == True:
+                if GREEN_SIGN == True:
                     final_label = NO_LIMIT
-                    STATUS_LIMIT = False
-                    STATUS_PARK = False
-                    
                 ### start sending proccessed command
-                #output("sending: angle: %d, label: %d" % (true_angle, final_label))
+                print("sending: angle: %d, label: %d" % (true_angle, final_label))
                 # user_cmd(STATE_value,t_labels,t_scores,center_x,center_y,vel,a)
                 lib.send_cmd(true_angle, int(final_label))
                 # output frame to Video
-                out.write(frame)
-                #if final_label == 2:
-                #    input("stop")
-                #if final_label == 1:
-                #    input("limit")
-                output(cout)
+                out.write(origin)
+                if final_label == 2:
+                    input("stop")
+                if final_label == 1:
+                    input("limit")
+                print(cout)
                 cout=cout+1
-                #output("the time of predict:",time.time()-nowtime)
-    except KeyboardInterrupt as e:
-        output("keyboard detected")
+                print("The time of predict:",time.time()-nowtime)
+    except KeyboardInterrupt:
+        print("keyboard detected")
         out.release()
         # stop car
         lib.send_cmd(1500, 2)
-        exit(0)
     finally:
-        output('exit')
+        print('exit')
 
 
 
-"""
-2020-07-16 16:59:28
-DEBUG INFO:
-114
-the time of predict: 0.052869319915771484
-Before func_expand image_shape: (128, 128, 3)
-vedio image_shape: (1, 128, 128, 3)
-predict img.shape: (1, 128, 128, 3)
-predict z.shape: (1, 128, 128, 3)
-[ 0.65283203]
-outputs1 value: [<paddlemobile.PaddleTensor object at 0x7f898c3ce0>]
-bboxes.shape (2, 6)
-labels: [1 2]
-scores: [ 0.58105469  0.125     ]
-boxes: [[   5.2265625    27.375       520.5         607.        ]
- [  35.90625       7.70703125  519.          556.        ]]
-t_labels: [1]
-t_scores: [0.58105469]
-the center coordinate of object: [262]     [317.1875]
-t_labels: [1, 2]
-t_scores: [0.58105469, 0.125]
-the center coordinate of object: [262, 277]     [317.1875, 281.853515625]
-angle: 1591, throttle: 1535
-******************************************angle: 1591, throttle: 1535
-*******************ignore  detect
-the send buff is:
-00 aa ff 05 37 06 41 55
-
-
-
-"""
