@@ -11,7 +11,7 @@ Copyright 2020 by Magician
 import numpy as np
 import os
 
-path = "C:/Users/Lenovo/Desktop/07252628_carline/072526_carline/data"
+path = "C:/Users/Lenovo/Desktop/2020年7月29日1649特殊情况直角/1"
 
 
 def txt_2_numpy():

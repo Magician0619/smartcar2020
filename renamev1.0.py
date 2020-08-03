@@ -14,8 +14,8 @@ import re
 #将src中的文件批处理命名放到dst中
 
 
-src_path = "C:/Users/Lenovo/Desktop/07252628_carline/0728_carline/data/img"
-dst_path = "C:/Users/Lenovo/Desktop/07252628_carline/072526_carline/data/img"
+src_path = "C:/Users/Lenovo/Desktop/2020年7月29日1649特殊情况直角/3/img"
+dst_path = "C:/Users/Lenovo/Desktop/2020年7月29日1649特殊情况直角/1/img"
 
 
 srclist = os.listdir(src_path)   #获取文件路径
