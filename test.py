@@ -35,18 +35,37 @@ cv2.imshow("im1", img)
 cv2.waitKey(0)
 cv2.destroyWindow("im1")
 '''
-def cnn_model(image):
-    conv1 = fluid.layers.conv2d(input=image, num_filters=32, filter_size=5, stride=2, act='relu')
-    conv2 = fluid.layers.conv2d(input=conv1, num_filters=32, filter_size=5, stride=2)
-    bn0 = fluid.layers.batch_norm(input=conv2,act='relu')
-    conv3 = fluid.layers.conv2d(input=bn0, num_filters=64, filter_size=5, stride=2, act='relu')
-    conv4 = fluid.layers.conv2d(input=conv3, num_filters=64, filter_size=3, stride=2)
-    bn1 = fluid.layers.batch_norm(input=conv4,act='relu')
-    conv5 = fluid.layers.conv2d(input=bn1, num_filters=128, filter_size=3, stride=1)
-    bn2 = fluid.layers.batch_norm(input=conv5,act='relu')
-    fc1 = fluid.layers.fc(input=bn2, size=128, act=None)
-    fc2 = fluid.layers.fc(input=fc1, size=64, act=None)
-    predict = fluid.layers.fc(input=fc2, size=1)
-    return predict
+
+def _start_worker(self):
+    try:
+        while True:
+            time.sleep(0.01)
+            self.request_dict_lock.acquire()
+            for key in list(self.request_dict):
+                if self.request_dict[key][-1] <= time.time():
+                    self._driver.send_cmd(self.request_dict[key][0],self.request_dict[key][1])
+                    if self.request_dict[key][0] == 0:
+                        print("SPEED:",self.request_dict[key])                   
+                    self.request_dict.pop(key)
+            self.request_dict_lock.release()
+    except Exception as e:
+        print(str(e))
+        return 
+
+elif axis == "hat0y":
+    # up -32767, down 32767
+    fvalue = value / 32767
+    data[0] = int(data[0] - 5*fvalue)
+    speed_car = data[0]
+    print("new speed:",data[0])
+    axis_states[axis] = fvalue
+    lib.send_cmd(data[0],angle_car)
+
+
+
+
+
+
+
 
 

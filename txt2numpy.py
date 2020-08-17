@@ -11,7 +11,8 @@ Copyright 2020 by Magician
 import numpy as np
 import os
 
-path = "C:/Users/Lenovo/Desktop/2020年7月29日1649特殊情况直角/1"
+path = "D:/2020年8月16日184321-1560（2500）overtake（需要改hsv和重写numpy）"
+
 
 
 def txt_2_numpy():

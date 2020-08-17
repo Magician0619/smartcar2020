@@ -11,7 +11,7 @@ opts,args = getopt.getopt(argv[1:],'-hH',['img_path=','save_path='])
 #print(opts)
 
 # E:/智能车/人工智能组资料/人工智能创意赛复赛/数据集/赛道线/7月26（大晴天 没拉窗帘）/1/img
-img_path = "C:/Users/Lenovo/Desktop/1/img"
+img_path = "C:/Users/Lenovo/Desktop/img (2)"
 save_path = "C:/Users/Lenovo/Desktop/1/hsv_img"
 
 
@@ -54,6 +54,7 @@ def img_extract(img_path, save_path):
         mask0 = cv.inRange(hsv, lowerb=lower_hsv, upperb=upper_hsv)
         #mask1 = cv.inRange(hsv, lowerb=lower_hsv1, upperb=upper_hsv1)
         mask = mask0# + mask1
+        mask = cv.erode(mask, cv.getStructuringElement(cv.MORPH_RECT, (2, 2)),iterations=3)
         ind = int(re.findall('.+(?=.jpg)', img)[0])
         new_name = str(ind) + '.jpg'
         cv.imwrite(os.path.join(save_path, new_name), mask)

@@ -1,3 +1,4 @@
+/*
 #include<opencv2/core.hpp>
 #include<opencv2/highgui.hpp>
 #include<opencv2/imgproc.hpp>
@@ -83,4 +84,13 @@ int main(int argc, char** argv)
 	callBack(0, 0);
 	waitKey(0);
 	return 0;
+}
+*/
+#include <stdio.h>
+#include <windows.h>
+int main()
+{
+    printf("Hello World\n");
+    system("pause");
+    return 0;
 }
